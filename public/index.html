@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <!-- JavaScript & CSS links -->
+    <link rel="stylesheet" type="text/css" href="CSS/Quizzical.css" />
+    <link rel="stylesheet" type="text/css" href="CSS/qunit-2.4.0.css" />
+    <script src="JavaScript/qunit-2.4.0.js"></script>
+  	<script src="JavaScript/jquery-3.2.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script> <!-- Socket.IO framework -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script> <!-- Vue Framework -->
+
+    <title>Game Lobby</title>
+  </head>
+
+  <body>
+    <h1>Quizzical</h1>
+    <h2>Game Lobby</h2>
+
+    <!-- Set up player name and start the game -->
+    <div id="app">
+      <div>
+        <h3>What is your name?</h3>
+        <form @submit="setPlayerName">
+          <input type="text" placeholder="Enter Player Name Here" v-model="playerName" />
+          <button>Quiz Me!</button>
+        </form>
+      </div>
+
+      <!-- Select answers to questions -->
+      <div id="questionsAnswers">
+        <div>
+          <h3> {{ question }} </h3>
+          <div class="row">
+            <div v-for="answer in answers"> <!-- Loop through and display answers -->
+              <div id="answers">
+                <div @click="pickAnswer(answer)">
+                  <button id="answerbtn"> {{ answer.text }} </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Display Points Scored -->
+        <div id="scoreBoard">
+          <h3>Scorecard</h3>
+            <h4> {{ playerName }}: </h4> <!-- Playername and points scored -->
+            <p>  <!-- How many questions has the user got correct? -->
+              {{ score != 0 ? score : 'No' }} correct answer{{ score != 1 ? 's' : '' }}.
+            </p>
+        </div>
+
+        <!-- Display other players -->
+        <div id="livePlayers">
+          <h3>Live Players</h3>
+          <table>
+              <tr>
+                <!-- Table headers -->
+                <th>Player Name</th>
+                <th>Score</th>
+              </tr>
+            <tbody>
+              <!-- Display player name, their score & index -->
+              <tr v-for="(player, key, index) in currentPlayers">
+                <td> {{ player.playerName }} </td>
+                <td> {{ player.score }} </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+    <script src="JavaScript/index.js"></script> <!-- External Javascript file storing Vue JS -->
+  </body>
+</html>
