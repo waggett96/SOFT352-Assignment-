@@ -22,10 +22,7 @@ button {
   font-family: verdana;
   margin:auto;
   display: block;
-}
-
-#answers {
-  margin-bottom: 1em;
+  width: 200px;
 }
 
 #questionsAnswers {
@@ -41,4 +38,10 @@ button {
 {
   display: inline-block;
   margin: 0 auto;
+}
+
+#playerNameDiv {
+  text-align: center;
+  padding: 10px;
+  spacing:10px;
 }

@@ -1,11 +1,18 @@
 // Dependencies
-var path = require('path');
+// var path = require('pasth');
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var https = require('https'); // Secure for retreiving questions
 var timers = require('timers');
+
+// Question & Player set up
+let questionQueue = []; // array of questions
+let currentQuestion = {}; // question itself e.g. question and answer
+let questionTime = 10; // 10 seconds per question for it to be shown
+let playerId = 0; // playerId to identify each player
+let otherPlayers = {}; // object stating the name and score of other player
 
 // get questions from third party website-database
 // Reference Link = https://opentdb.com/
@@ -16,18 +23,10 @@ var questionGathering = {
   method: 'GET'
 };
 
-// Question & Player set up
-let questionQueue = []; // array of questions
-let currentQuestion = {}; // question itself
-let questionTime = 10; // 10 seconds per question
-let playerId = 0; // playerId starts on 0 but will increment
-let otherPlayers = {}; // details of other players
+// Using express middleware, get everything in public folder
+app.use('', express.static('public'));
 
 /////////////////////////////////////////////////////////////////////////////
-// Boot up public folder
-var htmlPath = path.join(__dirname, 'public');
-app.use(express.static(htmlPath));
-
 // Fill in the question queue
 retreiveQuestion().then((question) => {
   currentQuestion = question; // create a new value for the currentQuestion
@@ -71,38 +70,39 @@ io.on('connection', function(socket){
 
   // Remove players who disconnect (leave the game)
   socket.on('disconnect', function(){
-    console.log(playerName + ' has left the game');
+    console.log('Player has left the game - ', playerNumber);
     removePlayer();
   });
 
-  // Remove player function
-  function removePlayer(){
-    delete otherPlayers[playerNumber];
-    socket.broadcast.emit('playerDisconnect' + playerName);
-  }
-
-  // Should a player not have a name, default it
+  // Setting Player Name if its not already been set ^^
   function setPlayerName(newName){
     if(!playerName.length){
-      console.log('New player = ', playerName);
+      console.log('New player - ' + newName);
       playerName = newName;
     }
   }
 
-  // Set the player score to the players
+  // Set the player score to the current player
   function setPlayerScore(newScore){
     var newScoreObject = {
-      'playerName' : playerName,
+      'playerNumber' : playerNumber,
       'name' : playerName,
-      'score' : newScore
+      'score' : newScore,
     };
     otherPlayers[playerNumber] = newScoreObject;
     socket.broadcast.emit('playerScored', JSON.stringify(newScoreObject));
   }
+
+  // Remove player function
+  function removePlayer(){
+    delete otherPlayers[playerNumber];
+    socket.broadcast.emit('playerDisconnect', playerNumber);
+  }
+
 });
 
 /////////////////////////////////////////////////////////////////////////////
-// index needs to listen to the Server
+// index.js needs to listen to the Server
 http.listen(3000, function(){
   console.log('You are now listening on port 3000');
 });
@@ -111,15 +111,14 @@ http.listen(3000, function(){
 // collect questions from third party website
 function collectQuestions(){
   // Using an eventual object of promise, eventually retreives the answer
-  // regardless whether its completed or failed
+  // regardless whether its completed or failed - another form of an asynchronous call
   return new Promise((resolve, reject) => {
-    console.log('Quizzical : Gathering questions...');
+    console.log('Quizzical: Gathering another 10 questions...');
 
     // Secure request
     https.request(questionGathering, function(res){
       res.setEncoding('utf8');
       res.on('data', function(block){
-
         // Put quiz questions into the queue
         var quizzicalData = JSON.parse(block);
         quizzicalData.results.forEach(function(question){
@@ -132,10 +131,11 @@ function collectQuestions(){
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// retreiveQuestion function to produce questions
+// retreiveQuestion function used to push next question to the client
 function retreiveQuestion() {
   return new Promise((resolve, reject) => {
-    console.log('Quzzical : Thinking of question.');
+    console.log('Quizzical: Preparing next question.');
+    // If questions in queue is less than 10, collect another batch
     if (questionQueue.length < 10) {
       collectQuestions().then(() => {
         resolve(questionQueue.shift());
