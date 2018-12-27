@@ -45,7 +45,11 @@ var app = new Vue ({
         socket.emit('playerAnswered', JSON.stringify({'playerName': this.playerName, 'playerScore': this.score}));
         console.log('Youre rising the ranks');
       }
-    }
+    },
+    disconnectPlayer: function(){
+      this.playerName = '';
+      this.score = 0;
+    },
   },
   created: function(){
     // start the socket
@@ -109,4 +113,13 @@ function loadAnswers(incorrect, correct){
     if (a.text > b.text) return 1;
     if (a.text < b.text) return -1;
   });
+}
+
+// Disable entry button
+function setNameSuccess() {
+  if (document.getElementById('setName').value === ""){
+    document.getElementById('entryBtn').disabled = true;
+  } else {
+    document.getElementById('entryBtn').disabled = false;
+  }
 }
