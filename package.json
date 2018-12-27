@@ -4,6 +4,7 @@
   "description": "",
   "main": "QuizzicalServer.js",
   "dependencies": {
+    "bootstrap": "^4.2.1",
     "express": "^4.16.4",
     "socket.io": "^2.2.0",
     "timers": "^0.1.1"

@@ -4,75 +4,104 @@
     <meta charset="utf-8">
     <!-- JavaScript & CSS links -->
     <link rel="stylesheet" type="text/css" href="CSS/Quizzical.css" />
+    <!-- Bootstrap CSS link -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="CSS/qunit-2.4.0.css" />
     <script src="JavaScript/qunit-2.4.0.js"></script>
   	<script src="JavaScript/jquery-3.2.1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script> <!-- Socket.IO framework -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script> <!-- Vue Framework -->
 
-    <title>Game Lobby</title>
+    <title>Quizzical</title>
   </head>
 
-  <body>
-    <h1>Quizzical</h1>
-    <h2>Game Lobby</h2>
-
+  <body class="bg-dark">
     <!-- Set up player name and start the game -->
-    <div id="app">
-      <div>
-        <h3>What is your name?</h3>
-        <form @submit="setPlayerName">
-          <input type="text" placeholder="Enter Player Name Here" v-model="playerName" />
-          <button>Quiz Me!</button>
-        </form>
+    <div class="container text-center" id="app">
+
+<!----------------------------------------------------------------------------------------->
+      <!-- Jumbotron opening page -->
+      <div class="jumbotron bg-info text-white" id="playerNameDiv" v-show="playerNameDiv">
+        <div class="container">
+          <h1 class="display-1">Quizzical</h1>
+          <h3>Welcome to Quizzical</h3>
+          <p class="lead">What would you like to be known as?</p>
+          <form @submit="setPlayerName">
+            <input type="text" id="setName" onkeypress="setNameSuccess()" placeholder="Enter Player Name Here" v-model="playerName" />
+            <button id="entryBtn" @click="questionsAnswers = true; playerNameDiv = false; instructionsDiv = false">Quiz Me!</button>
+            <button @click="questionsAnswers = false; playerNameDiv = false; instructionsDiv = true">Instructions</button>
+          </form>
+        </div>
       </div>
 
+<!----------------------------------------------------------------------------------------->
       <!-- Select answers to questions -->
-      <div id="questionsAnswers">
-        <div>
-          <h3> {{ question }} </h3>
-          <div class="row">
-            <div v-for="answer in answers"> <!-- Loop through and display answers -->
-              <div id="answers">
-                <div @click="pickAnswer(answer)">
-                  <button id="answerbtn"> {{ answer.text }} </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="container bg-info" id="questionsAnswers" v-show="questionsAnswers">
 
-        <!-- Display Points Scored -->
-        <div id="scoreBoard">
+        <!-- Player Points -->
+        <div class="" id="scoreBoard">
           <h3>Scorecard</h3>
-            <h4> {{ playerName }}: </h4> <!-- Playername and points scored -->
+            <p> {{ playerName }}: </p>
             <p>  <!-- How many questions has the user got correct? -->
               {{ score != 0 ? score : 'No' }} correct answer{{ score != 1 ? 's' : '' }}.
             </p>
         </div>
 
-        <!-- Display other players -->
-        <div id="livePlayers">
+        <!-- Answers -->
+        <div id="answers">
+          <h3> {{ question }} </h3>
+          <div v-for="answer in answers"> <!-- Loop through and display answers -->
+            <div @click="pickAnswer(answer)">
+              <button type="button" class="btn custom-btn btn-secondary" id="answerbtn"> {{ answer.text }} </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Other players -->
+        <div class="table-Responsive" id="livePlayers">
           <h3>Live Players</h3>
           <table>
+            <thead class="thead-dark">
               <tr>
                 <!-- Table headers -->
                 <th>Player Name</th>
                 <th>Score</th>
               </tr>
+            </thead>
             <tbody>
               <!-- Display player name, their score & index -->
-              <tr v-for="(player, key, index) in currentPlayers">
+              <tr v-for="(player, key, index) in otherPlayers">
                 <td> {{ player.playerName }} </td>
                 <td> {{ player.score }} </td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        <!-- Hide questions&answers div and show enter name div -->
+        <div @click="disconnectPlayer">
+        <button @click="questionsAnswers = false; playerNameDiv = true; instructionsDiv = false">Restart</button>
+        </div>
+      </div>
+<!----------------------------------------------------------------------------------------->
+      <!-- Displaying the Instructions of the game -->
+      <div class="container bg-info" id="instructionsDiv" v-show="instructionsDiv">
+        <h2>Instructions</h2>
+        <p class="lead">The rules of the game are as follows:</p>
+
+        <p>1. Enter a name for yourself, this name will be seen by all</p>
+        <p>2. Start by pressing the <kbd>Quiz Me</kbd> button</p>
+        <p>3. You will then be entered into the game lobby where you compete agaisnt others for the highest score</p>
+
+        <button class="text-center" @click="questionsAnswers = false; playerNameDiv = true; instructionsDiv = false">Return</button>
       </div>
     </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
-    <script src="JavaScript/index.js"></script> <!-- External Javascript file storing Vue JS -->
+<!----------------------------------------------------------------------------------------->
+    <!-- Index.js = Vue.js & Server connection -->
+    <script src="JavaScript/index.js"></script>
+    <!-- Bootstrap Javascript -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
   </body>
 </html>
