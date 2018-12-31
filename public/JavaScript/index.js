@@ -3,16 +3,14 @@
 var app = new Vue ({
   el: '#app',
   data: {
+    playerNumber: 0,
+    playerName: '',
+    score: 0,
+    registered: false,
     otherPlayers: {},
     question: '',
-    registered: false,
-    playerName: '',
-    playerNumber: 0,
-    score: 0,
-    answers: [
-      '', '', '', '',
-    ],
     answered: false,
+    answers: ['', '', '', '',],
     questionsAnswers: false,
     playerNameDiv: true,
     instructionsDiv: false,
@@ -32,24 +30,61 @@ var app = new Vue ({
         this.registered = true;
       }
     },
+
+    // Function for answering the question
     pickAnswer: function(answer){
       if (this.answered) {
+        // Set answered to being true
         return true;
       }
-
       this.answered = true;
       answer.selected = true;
       if (answer.correct) {
         this.score++;
         this.otherPlayers[this.playerNumber].score = this.score;
-        socket.emit('playerAnswered', JSON.stringify({'playerName': this.playerName, 'playerScore': this.score}));
-        console.log('Youre rising the ranks');
+        socket.emit('playerAnswered', JSON.stringify({'playerName': this.playerName, 'score': this.score}));
+        console.log('You got another one right!');
       }
     },
+
+    // Remove player from game lobby
     disconnectPlayer: function(){
-      this.playerName = '';
-      this.score = 0;
+      window.location.reload();
     },
+
+    // Disable entry button
+    checkPlayerName: function() {
+      if (document.getElementById('setName').value === "") {
+        document.getElementById('entryBtn').disabled = false;
+        alert("You must enter a player name to begin");
+      } else {
+            this.questionsAnswers = true;
+            this.playerNameDiv = false;
+            this.instructionsDiv = false;
+          }
+    },
+
+    // View Instructions
+    viewInstructions: function() {
+      this.questionsAnswers = false;
+      this.playerNameDiv = false;
+      this.instructionsDiv = true;
+    },
+
+    // Rest the quiz game, starting with a new players
+    leaveGame: function(){
+      alert("Thank you for playing Quizzical :)");
+      this.questionsAnswers = false;
+      this.playerNameDiv = true;
+      this.instructionsDiv = false;
+    },
+
+    // Closing instructions div
+    closeInstructions: function(){
+      this.questionsAnswers = false;
+      this.playerNameDiv = true;
+      this.instructionsDiv = false;
+    }
   },
   created: function(){
     // start the socket
@@ -77,7 +112,7 @@ var app = new Vue ({
       delete vue.otherPlayers[playerNumber];
     });
 
-    // Deal with new questions from third party
+    // Deal with new questions from Open source database
     socket.on('question', function(json){
       var rawQuestion = JSON.parse(json);
       vue.question = urldecode(rawQuestion.question);
@@ -113,13 +148,4 @@ function loadAnswers(incorrect, correct){
     if (a.text > b.text) return 1;
     if (a.text < b.text) return -1;
   });
-}
-
-// Disable entry button
-function setNameSuccess() {
-  if (document.getElementById('setName').value === ""){
-    document.getElementById('entryBtn').disabled = true;
-  } else {
-    document.getElementById('entryBtn').disabled = false;
-  }
 }

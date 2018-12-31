@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="CSS/qunit-2.4.0.css" />
     <script src="JavaScript/qunit-2.4.0.js"></script>
   	<script src="JavaScript/jquery-3.2.1.js"></script>
+    <script src="JavaScript/QuizzicalQunit.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script> <!-- Socket.IO framework -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script> <!-- Vue Framework -->
 
@@ -24,63 +25,72 @@
       <div class="jumbotron bg-info text-white" id="playerNameDiv" v-show="playerNameDiv">
         <div class="container">
           <h1 class="display-1">Quizzical</h1>
-          <h3>Welcome to Quizzical</h3>
-          <p class="lead">What would you like to be known as?</p>
+          <p>Welcome to an interactive multiplayer quiz game to play friends or family</p>
+          <p class="lead">What would your player name to be?</p>
           <form @submit="setPlayerName">
-            <input type="text" id="setName" onkeypress="setNameSuccess()" placeholder="Enter Player Name Here" v-model="playerName" />
-            <button id="entryBtn" @click="questionsAnswers = true; playerNameDiv = false; instructionsDiv = false">Quiz Me!</button>
-            <button @click="questionsAnswers = false; playerNameDiv = false; instructionsDiv = true">Instructions</button>
+            <input type="text" id="setName" placeholder="Enter Player Name Here" v-model="playerName" /><br />
+            <button class="btn-lg btn-block" id="entryBtn" @click="checkPlayerName">Quiz Me!</button><br />
+            <button class="btn-lg" id="viewInstructions" @click="viewInstructions">Instructions</button>
           </form>
         </div>
       </div>
 
 <!----------------------------------------------------------------------------------------->
       <!-- Select answers to questions -->
-      <div class="container bg-info" id="questionsAnswers" v-show="questionsAnswers">
-
-        <!-- Player Points -->
-        <div class="" id="scoreBoard">
-          <h3>Scorecard</h3>
-            <p> {{ playerName }}: </p>
-            <p>  <!-- How many questions has the user got correct? -->
-              {{ score != 0 ? score : 'No' }} correct answer{{ score != 1 ? 's' : '' }}.
-            </p>
-        </div>
-
-        <!-- Answers -->
-        <div id="answers">
-          <h3> {{ question }} </h3>
-          <div v-for="answer in answers"> <!-- Loop through and display answers -->
-            <div @click="pickAnswer(answer)">
-              <button type="button" class="btn custom-btn btn-secondary" id="answerbtn"> {{ answer.text }} </button>
+      <div class="bg-info" id="questionsAnswers" v-show="questionsAnswers">
+        <div class="row justify-content-center">
+          <!-- Player Points -->
+          <div class="col-3" id="scoreBoard">
+            <div class="card bg-secondary">
+              <div class="card-block">
+                <h3>Scorecard</h3>
+                <p> {{ playerName }}: </p>
+                <!-- How many questions has the user got correct? -->
+                <p>{{ score != 0 ? score : 'No' }} correct answer{{ score != 1 ? 's' : '' }}.</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Other players -->
-        <div class="table-Responsive" id="livePlayers">
-          <h3>Live Players</h3>
-          <table>
-            <thead class="thead-dark">
-              <tr>
-                <!-- Table headers -->
-                <th>Player Name</th>
-                <th>Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Display player name, their score & index -->
-              <tr v-for="(player, key, index) in otherPlayers">
-                <td> {{ player.playerName }} </td>
-                <td> {{ player.score }} </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+          <!-- Answers -->
+          <div class="col-6" id="answers">
+            <h4 v-html="question"> {{ question }} </h4> <!-- Show the raw html to avoid invaid "" & '' -->
+            <div v-for="answer in answers"> <!-- Loop through and display answers -->
+              <!-- If answered is true and correct = green, if answered and incorrect = red -->
+              <div class="card bg-secondary" :class="{ 'bg-success': answered && answer.correct, 'bg-danger': answer.selected && !answer.correct }">
+                <div class="card-block" @click="pickAnswer(answer)">
+                  <p id="answerbtn" v-html="answer.text"> {{ answer.text }} </p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <!-- Hide questions&answers div and show enter name div -->
-        <div @click="disconnectPlayer">
-        <button @click="questionsAnswers = false; playerNameDiv = true; instructionsDiv = false">Restart</button>
+          <!-- Other players -->
+          <div id="otherPlayers" class="col-3">
+            <div class="card bg-secondary">
+              <h3>Other Players</h3>
+              <table class="table table-striped text-centered">
+                <thead>
+                  <tr>
+                    <!-- Table headers -->
+                    <th>Player Name</th>
+                    <th>Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Display player name, their score & index -->
+                  <tr v-for="(player, key, index) in otherPlayers">
+                    <td> {{ player.playerName }} </td>
+                    <td> {{ player.score }} </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Hide questions&answers div and show enter name div -->
+          <div @click="disconnectPlayer">
+          <button class="btn-lg" @click="leaveGame">Leave Game</button>
+          </div>
         </div>
       </div>
 <!----------------------------------------------------------------------------------------->
@@ -91,11 +101,15 @@
 
         <p>1. Enter a name for yourself, this name will be seen by all</p>
         <p>2. Start by pressing the <kbd>Quiz Me</kbd> button</p>
-        <p>3. You will then be entered into the game lobby where you compete agaisnt others for the highest score</p>
+        <p>3. You will then be entered into the game lobby where you compete against others for the highest score</p>
 
-        <button class="text-center" @click="questionsAnswers = false; playerNameDiv = true; instructionsDiv = false">Return</button>
+        <button class="text-center" @click="closeInstructions">Return</button>
       </div>
     </div>
+<!----------------------------------------------------------------------------------------->
+    <!-- QUNIT - uncomment to see the tests -->
+    <!-- <div id="qunit"></div>
+    <div id="qunit-fixture"></div> -->
 <!----------------------------------------------------------------------------------------->
     <!-- Index.js = Vue.js & Server connection -->
     <script src="JavaScript/index.js"></script>

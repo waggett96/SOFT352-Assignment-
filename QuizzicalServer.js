@@ -10,11 +10,11 @@ var timers = require('timers');
 // Question & Player set up
 let questionQueue = []; // array of questions
 let currentQuestion = {}; // question itself e.g. question and answer
-let questionTime = 10; // 10 seconds per question for it to be shown
+let questionTime = 5; // 10 seconds per question for it to be shown
 let playerId = 0; // playerId to identify each player
 let otherPlayers = {}; // object stating the name and score of other player
 
-// get questions from third party website-database
+// get questions from open source database
 // Reference Link = https://opentdb.com/
 var questionGathering = {
   host: 'opentdb.com',
@@ -26,7 +26,6 @@ var questionGathering = {
 // Using express middleware, get everything in public folder
 app.use('', express.static('public'));
 
-/////////////////////////////////////////////////////////////////////////////
 // Fill in the question queue
 retreiveQuestion().then((question) => {
   currentQuestion = question; // create a new value for the currentQuestion
@@ -38,7 +37,7 @@ timers.setInterval(function(){
     currentQuestion = question;
     io.emit('question', JSON.stringify(currentQuestion)); // Convert whole object to string
   });
-}, questionTime * 1000); // Timer of 30 seconds
+}, questionTime * 1000); // Timer of 5 seconds
 
 /////////////////////////////////////////////////////////////////////////////
 // Setting up the websockets
@@ -61,11 +60,11 @@ io.on('connection', function(socket){
   });
 
   // Alter players score when answering questions
-  socket.on('playerAnswered', function(playerScore){
-    var playerObject = JSON.parse(playerScore);
+  socket.on('playerAnswered', function(playerJson){
+    var playerObject = JSON.parse(playerJson);
     setPlayerName(playerObject.playerName);
-    setPlayerScore(playerObject.playerScore);
-    console.log('Score', playerName + ': ' + playerObject.playerScore)
+    setPlayerScore(playerObject.score);
+    console.log('Score', playerName + ': ' + playerObject.score)
   });
 
   // Remove players who disconnect (leave the game)
@@ -86,7 +85,7 @@ io.on('connection', function(socket){
   function setPlayerScore(newScore){
     var newScoreObject = {
       'playerNumber' : playerNumber,
-      'name' : playerName,
+      'playerName' : playerName,
       'score' : newScore,
     };
     otherPlayers[playerNumber] = newScoreObject;
